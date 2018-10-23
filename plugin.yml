@@ -1,0 +1,11 @@
+main: me.cjCommands.main.Main
+name: CJCommands
+author: CJM
+version: 1.0
+api-version: 1.13
+description: Random Commands
+
+commands:
+   c:
+      usage: /<C> [command]
+      description: teleports player to a random location
