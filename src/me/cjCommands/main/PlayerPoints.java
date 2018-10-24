@@ -9,10 +9,19 @@ public class PlayerPoints {
 		list = new LinkedList<PlayerPointLocations>();
 	}
 
+	/**
+	 * Adds a PlayerPointLocation to the list
+	 * @param PlayerPointLocation
+	 */
 	public void add(PlayerPointLocations ppl) {
 		list.add(ppl);
 	}
 
+	/**
+	 * Finds a PlayerPointLocation by username and returns it
+	 * @param Players username
+	 * @return PlayerPointLocation
+	 */
 	public PlayerPointLocations getPlayer(String userName) {
 		int index = getIndexNumberFromName(userName);
 		if (index != -1) {
