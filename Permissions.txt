@@ -1,0 +1,8 @@
+CJCommands.getPoints
+CJCommands.distto -- get distance to a player or between 2 other players
+CJCommands.getpointdistance -- gets the distance between the 2 set points
+CJCommands.setpoint -- set a point
+CJCommands.setgamemode -- set own gamemode
+CJCommands.setgamemodeotherplayer -- set another players gamemode
+CJCommands.getplayerlocation -- gets a players location
+CJCommands.randomtp -- teleports you to a random location

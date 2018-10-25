@@ -107,6 +107,11 @@ public class Main extends JavaPlugin {
 	}
 
 	private void getPoints(CommandSender sender, String[] args) {
+		if (!sender.hasPermission("CJCommands.getpoints")) {
+			noPermission(sender);
+			return;
+		}
+
 		if (!(sender instanceof Player)) {
 			sender.sendMessage("Must be a player to run this command");
 		}
@@ -130,6 +135,11 @@ public class Main extends JavaPlugin {
 	}
 
 	private void distanceToPlayer(CommandSender sender, String[] args, boolean sendAsInt) {
+		if (!sender.hasPermission("CJCommands.distto")) {
+			noPermission(sender);
+			return;
+		}
+
 		Player player1 = null;
 		Player player2 = null;
 		double distance;
@@ -192,6 +202,11 @@ public class Main extends JavaPlugin {
 	}
 
 	private void getPointDistance(CommandSender sender, String[] args, boolean sendAsInt) {
+		if (!sender.hasPermission("CJCommands.getpointdistance")) {
+			noPermission(sender);
+			return;
+		}
+
 		if (sender instanceof Player) {
 			if (args.length == 1) {
 				Player player = (Player) sender;
@@ -226,6 +241,11 @@ public class Main extends JavaPlugin {
 	}
 
 	private void setPoint(CommandSender sender, String[] args) {
+		if (!sender.hasPermission("CJCommands.setpoint")) {
+			noPermission(sender);
+			return;
+		}
+
 		if (sender instanceof Player) {
 			Player player = (Player) sender;
 			if (args.length == 2) {
@@ -265,11 +285,16 @@ public class Main extends JavaPlugin {
 	}
 
 	private void setGamemode(CommandSender sender, String[] args) {
+
 		Player player;
 		int gamemode = -1;
 		String messageBeginning;
 
 		if (args.length == 2) { // Setting own gamemode
+			if (!sender.hasPermission("CJCommands.setgamemode")) {
+				noPermission(sender);
+				return;
+			}
 			if (sender instanceof Player) {
 				player = (Player) sender;
 				try {
@@ -284,7 +309,11 @@ public class Main extends JavaPlugin {
 				return;
 			}
 		} else if (args.length == 3) { // Setting another players gamemode
-			player = getServer().getPlayer(args[2]);
+			if (!sender.hasPermission("CJCommands.setgamemodeotherplayer")) {
+				noPermission(sender);
+				return;
+			}
+				player = getServer().getPlayer(args[2]);
 			if (player != null && player.isOnline()) {
 				try {
 					gamemode = Integer.parseInt(args[1]);
@@ -340,6 +369,11 @@ public class Main extends JavaPlugin {
 	}
 
 	private void getPlayerLocation(CommandSender sender, String[] args) {
+		if (!sender.hasPermission("CJCommands.getplayerlocation")) {
+			noPermission(sender);
+			return;
+		}
+
 		if (args.length != 2) {
 			sendMessage(sender, ChatColor.RED, "Invalid number of arguments");
 		} else {
@@ -375,6 +409,11 @@ public class Main extends JavaPlugin {
 	}
 
 	private void randomTeleportCommand(CommandSender sender) {
+		if (!sender.hasPermission("CJCommands.randomtp")) {
+			noPermission(sender);
+			return;
+		}
+
 		if (sender instanceof Player) {
 			Player player = (Player) sender;
 			Location newLocation = new Location(player.getWorld(), MyFuncs.Random.randomIntBetween(-29999983, 29999983),
@@ -388,5 +427,9 @@ public class Main extends JavaPlugin {
 		} else {
 			getLogger().info("Must be a player to run this command");
 		}
+	}
+
+	private void noPermission(CommandSender sender) {
+		sender.sendMessage(ChatColor.RED + "You do not have permission to use this command");
 	}
 }
