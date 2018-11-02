@@ -19,13 +19,17 @@ public class Main extends JavaPlugin {
 		playerPoints = new PlayerPoints();
 	}
 
+//	@Override
+//	public void onEnable() {
+//		getConfig().options().copyDefaults(true);
+//		saveConfig();
+//	}
+
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
 		if (args.length == 0) {
-			if (sender instanceof Player) {
-				sendMessage(sender, ChatColor.RED, "No arguements");
-			}
+			sender.sendMessage(ChatColor.RED + "No arguements");
 		} else {
 			switch (args[0].toLowerCase()) {
 			case "randomtp":
@@ -64,6 +68,15 @@ public class Main extends JavaPlugin {
 			case "help":
 				helpMenu(sender, args);
 				break;
+			case "slay":
+				slay(sender, args);
+				break;
+			case "tpb":
+				teleportBehind(sender, args);
+				break;
+			case "teleportBehind":
+				teleportBehind(sender, args);
+				break;
 			default:
 				break;
 			}
@@ -72,6 +85,126 @@ public class Main extends JavaPlugin {
 		return true;
 	}
 
+	/**
+	 * Teleports a player to the block behind another player
+	 * 
+	 * @param sender
+	 * @param args
+	 */
+	private void teleportBehind(CommandSender sender, String[] args) {
+		if (args.length == 2) {
+			// Checks if the sender is a player
+			if (!(sender instanceof Player)) {
+				sender.sendMessage(ChatColor.RED + "Must be a player to teleport");
+				return;
+			}
+
+			// Checks if the sender had permission to run this command
+			if (!sender.hasPermission("CJCommands.teleportbehind")) {
+				noPermission(sender);
+				return;
+			}
+
+			Player senderPlayer = (Player) sender;
+			Player toPlayer = getServer().getPlayer(args[1]);
+
+			if (toPlayer == null) {
+				sender.sendMessage(ChatColor.RED + "\"" + args[1] + "\" does not exist in this server");
+				return;
+			}
+
+			senderPlayer.teleport(getBehindLocation(toPlayer));
+			senderPlayer.sendMessage("Teleported behind " + toPlayer.getName());
+		} else if (args.length == 3) {
+			// Checks if the sender had permission to run this command
+			if (!sender.hasPermission("CJCommands.teleportbehindothers")) {
+				noPermission(sender);
+				return;
+			}
+
+			Player fromPlayer = getServer().getPlayer(args[1]);
+			Player toPlayer = getServer().getPlayer(args[2]);
+
+			if (fromPlayer == null && toPlayer == null) {
+				sender.sendMessage(ChatColor.RED + "Neither player exists in this server");
+				return;
+			} else if (fromPlayer == null) {
+				sender.sendMessage(ChatColor.RED + "\"" + args[1] + "\" does not exist in this server");
+				return;
+			} else if (toPlayer == null) {
+				sender.sendMessage(ChatColor.RED + "\"" + args[2] + "\" does not exist in this server");
+				return;
+			}
+
+			fromPlayer.teleport(getBehindLocation(toPlayer));
+			sender.sendMessage("Teleported " + fromPlayer.getName() + " behind " + toPlayer.getName());
+		}
+	}
+
+	/**
+	 * Gets the location 1 block behind a player
+	 * 
+	 * @param player
+	 * @return Location behind the player
+	 */
+	private Location getBehindLocation(Player player) {
+		Location behindLocation = player.getLocation();
+
+		switch (player.getFacing()) {
+		case NORTH:
+			behindLocation.setZ(behindLocation.getZ() + 1);
+			break;
+		case SOUTH:
+			behindLocation.setZ(behindLocation.getZ() - 1);
+			break;
+		case EAST:
+			behindLocation.setX(behindLocation.getX() - 1);
+			break;
+		case WEST:
+			behindLocation.setX(behindLocation.getX() + 1);
+			break;
+		default:
+			break;
+		}
+
+		behindLocation.setPitch(0);
+
+		return behindLocation;
+	}
+
+	/**
+	 * Kills player
+	 * 
+	 * @param sender
+	 * @param args
+	 */
+	private void slay(CommandSender sender, String[] args) {
+		if (!sender.hasPermission("CJCommands.slay")) {
+			noPermission(sender);
+			return;
+		}
+
+		if (args.length != 2) {
+			sender.sendMessage(ChatColor.RED + "Invalid number of arguements");
+			return;
+		}
+
+		Player victim = getServer().getPlayer(args[1]);
+
+		if (victim == null || !victim.getName().equalsIgnoreCase(args[1])) {
+			sender.sendMessage(ChatColor.RED + "Player is not in this server");
+			return;
+		}
+
+		victim.setHealth(0);
+	}
+
+	/**
+	 * Displays a help menu to the command sender
+	 * 
+	 * @param sender
+	 * @param args
+	 */
 	private void helpMenu(CommandSender sender, String args[]) {
 		String helpMenu = "";
 
@@ -106,6 +239,12 @@ public class Main extends JavaPlugin {
 
 	}
 
+	/**
+	 * Returns the 2 points the player set to the command sender
+	 * 
+	 * @param sender
+	 * @param args
+	 */
 	private void getPoints(CommandSender sender, String[] args) {
 		if (!sender.hasPermission("CJCommands.getpoints")) {
 			noPermission(sender);
@@ -134,6 +273,13 @@ public class Main extends JavaPlugin {
 
 	}
 
+	/**
+	 * Gets the distance between 2 players and sends it to the command sender
+	 * 
+	 * @param sender
+	 * @param args
+	 * @param sendAsInt
+	 */
 	private void distanceToPlayer(CommandSender sender, String[] args, boolean sendAsInt) {
 		if (!sender.hasPermission("CJCommands.distto")) {
 			noPermission(sender);
@@ -148,14 +294,14 @@ public class Main extends JavaPlugin {
 			sender.sendMessage("Must be a player to run this command");
 			return;
 		} else if (args.length != 2 && args.length != 3) {
-			sendMessage(sender, ChatColor.RED, "Invalid number of arguements");
+			sender.sendMessage(ChatColor.RED + "Invalid number of arguements");
 			return;
 		} else if (args.length == 2) {
 			player1 = (Player) sender;
 			player2 = getServer().getPlayer(args[1]);
 
 			if (player2 == null) {
-				sendMessage(sender, ChatColor.RED, "Player is not in this server");
+				sender.sendMessage(ChatColor.RED + "Player is not in this server");
 				return;
 			}
 		} else if (args.length == 3) {
@@ -163,13 +309,13 @@ public class Main extends JavaPlugin {
 			player2 = getServer().getPlayer(args[2]);
 
 			if (player1 == null && player2 == null) {
-				sendMessage(sender, ChatColor.RED, "Neither player is in this server");
+				sender.sendMessage(ChatColor.RED + "Neither player is in this server");
 				return;
 			} else if (player1 == null) {
-				sendMessage(sender, ChatColor.RED, args[1] + " is not in this server");
+				sender.sendMessage(ChatColor.RED + args[1] + " is not in this server");
 				return;
 			} else if (player2 == null) {
-				sendMessage(sender, ChatColor.RED, args[2] + " is not in this server");
+				sender.sendMessage(ChatColor.RED + args[2] + " is not in this server");
 				return;
 			}
 		}
@@ -196,11 +342,25 @@ public class Main extends JavaPlugin {
 
 	}
 
+	/**
+	 * Gets the distance between 2 Locations
+	 * 
+	 * @param location1
+	 * @param location2
+	 * @return
+	 */
 	private double getDistance(Location location1, Location location2) {
 		return Math.sqrt(Math.pow(location2.getX() - location1.getX(), 2)
 				+ Math.pow(location2.getY() - location1.getY(), 2) + Math.pow(location2.getZ() - location1.getZ(), 2));
 	}
 
+	/**
+	 * Gets the distance between the 2 points the player set
+	 * 
+	 * @param sender
+	 * @param args
+	 * @param sendAsInt
+	 */
 	private void getPointDistance(CommandSender sender, String[] args, boolean sendAsInt) {
 		if (!sender.hasPermission("CJCommands.getpointdistance")) {
 			noPermission(sender);
@@ -213,25 +373,25 @@ public class Main extends JavaPlugin {
 				PlayerPointLocations ppl = playerPoints.getPlayer(player.getName());
 
 				if (ppl == null) {
-					sendMessage(sender, ChatColor.RED, "No points set");
+					sender.sendMessage(ChatColor.RED + "No points set");
 					return;
 				} else if (!ppl.location1Set()) {
-					sendMessage(sender, ChatColor.RED, "Point 1 not set");
+					sender.sendMessage(ChatColor.RED + "Point 1 not set");
 					return;
 				} else if (!ppl.location2Set()) {
-					sendMessage(sender, ChatColor.RED, "Point 2 not set");
+					sender.sendMessage(ChatColor.RED + "Point 2 not set");
 					return;
 				}
 
 				DecimalFormat dp = new DecimalFormat(".###");
 
 				if (sendAsInt) {
-					sendMessage(sender, ChatColor.WHITE, "Distance: " + ppl.getDistanceInt());
+					sender.sendMessage(ChatColor.WHITE + "Distance: " + ppl.getDistanceInt());
 				} else {
-					sendMessage(sender, ChatColor.WHITE, "Distance " + dp.format(ppl.getDistanceDouble()));
+					sender.sendMessage("Distance " + dp.format(ppl.getDistanceDouble()));
 				}
 			} else {
-				sendMessage(sender, ChatColor.RED, "Invalid number of arguements");
+				sender.sendMessage(ChatColor.RED + "Invalid number of arguements");
 				return;
 			}
 		} else {
@@ -240,6 +400,12 @@ public class Main extends JavaPlugin {
 		}
 	}
 
+	/**
+	 * Sets one of the players saved points
+	 * 
+	 * @param sender
+	 * @param args
+	 */
 	private void setPoint(CommandSender sender, String[] args) {
 		if (!sender.hasPermission("CJCommands.setpoint")) {
 			noPermission(sender);
@@ -253,7 +419,7 @@ public class Main extends JavaPlugin {
 				try {
 					point = Integer.parseInt(args[1]);
 				} catch (NumberFormatException e) {
-					sendMessage(sender, ChatColor.RED, "Invalid number. Must be 1 or 2");
+					sender.sendMessage(ChatColor.RED + "Invalid number. Must be 1 or 2");
 					return;
 				}
 
@@ -272,11 +438,11 @@ public class Main extends JavaPlugin {
 						player.sendMessage("Set point 1 to XYZ: " + formatLocation(ppl.getLocation2(), 3));
 					}
 				} else {
-					sendMessage(sender, ChatColor.RED, "Invalid number. Must be 1 or 2");
+					sender.sendMessage(ChatColor.RED + "Invalid number. Must be 1 or 2");
 					return;
 				}
 			} else {
-				sendMessage(sender, ChatColor.RED, "Invalid number of arguements");
+				sender.sendMessage(ChatColor.RED + "Invalid number of arguements");
 				return;
 			}
 		} else {
@@ -284,6 +450,12 @@ public class Main extends JavaPlugin {
 		}
 	}
 
+	/**
+	 * Sets the gamemode of a player
+	 * 
+	 * @param sender
+	 * @param args
+	 */
 	private void setGamemode(CommandSender sender, String[] args) {
 
 		Player player;
@@ -300,7 +472,7 @@ public class Main extends JavaPlugin {
 				try {
 					gamemode = Integer.parseInt(args[1]);
 				} catch (NumberFormatException e) {
-					sendMessage(sender, ChatColor.RED, "Invalid gamemode number");
+					sender.sendMessage(ChatColor.RED + "Invalid gamemode number");
 					return;
 				}
 				messageBeginning = "Set own gamemode to ";
@@ -313,12 +485,12 @@ public class Main extends JavaPlugin {
 				noPermission(sender);
 				return;
 			}
-				player = getServer().getPlayer(args[2]);
+			player = getServer().getPlayer(args[2]);
 			if (player != null && player.isOnline()) {
 				try {
 					gamemode = Integer.parseInt(args[1]);
 				} catch (NumberFormatException e) {
-					sendMessage(sender, ChatColor.RED, "Invalid gamemode number");
+					sender.sendMessage(ChatColor.RED + "Invalid gamemode number");
 					return;
 				}
 
@@ -329,11 +501,11 @@ public class Main extends JavaPlugin {
 					messageBeginning = "Set" + args[2] + "'s gamemode to ";
 				}
 			} else {
-				sendMessage(sender, ChatColor.RED, args[2] + " is not in the server");
+				sender.sendMessage(ChatColor.RED + args[2] + " is not in the server");
 				return;
 			}
 		} else {
-			sendMessage(sender, ChatColor.RED, "Invalid number of arguements");
+			sender.sendMessage(ChatColor.RED + "Invalid number of arguements");
 			return;
 		}
 
@@ -341,33 +513,39 @@ public class Main extends JavaPlugin {
 		case 0:
 			if (player.getGameMode() != GameMode.SURVIVAL) {
 				player.setGameMode(GameMode.SURVIVAL);
-				sendMessage(sender, ChatColor.WHITE, messageBeginning + GameMode.SURVIVAL);
+				sender.sendMessage(ChatColor.WHITE + messageBeginning + GameMode.SURVIVAL);
 			}
 			break;
 		case 1:
 			if (player.getGameMode() != GameMode.CREATIVE) {
 				player.setGameMode(GameMode.CREATIVE);
-				sendMessage(sender, ChatColor.WHITE, messageBeginning + GameMode.CREATIVE);
+				sender.sendMessage(ChatColor.WHITE + messageBeginning + GameMode.CREATIVE);
 			}
 			break;
 		case 2:
 			if (player.getGameMode() != GameMode.ADVENTURE) {
 				player.setGameMode(GameMode.ADVENTURE);
-				sendMessage(sender, ChatColor.WHITE, messageBeginning + GameMode.ADVENTURE);
+				sender.sendMessage(ChatColor.WHITE + messageBeginning + GameMode.ADVENTURE);
 			}
 			break;
 		case 3:
 			if (player.getGameMode() != GameMode.SPECTATOR) {
 				player.setGameMode(GameMode.SPECTATOR);
-				sendMessage(sender, ChatColor.WHITE, messageBeginning + GameMode.SPECTATOR);
+				sender.sendMessage(ChatColor.WHITE + messageBeginning + GameMode.SPECTATOR);
 			}
 			break;
 		default:
-			sendMessage(sender, ChatColor.RED, "Invalid gamemode number");
+			sender.sendMessage(ChatColor.RED + "Invalid gamemode number");
 			break;
 		}
 	}
 
+	/**
+	 * Returns the location of a player to the command sender
+	 * 
+	 * @param sender
+	 * @param args
+	 */
 	private void getPlayerLocation(CommandSender sender, String[] args) {
 		if (!sender.hasPermission("CJCommands.getplayerlocation")) {
 			noPermission(sender);
@@ -375,18 +553,25 @@ public class Main extends JavaPlugin {
 		}
 
 		if (args.length != 2) {
-			sendMessage(sender, ChatColor.RED, "Invalid number of arguments");
+			sender.sendMessage(ChatColor.RED + "Invalid number of arguments");
 		} else {
 			Player player = getServer().getPlayer(args[1]);
 
 			if (player != null && player.isOnline()) {
 				sender.sendMessage(formatLocation(player.getLocation(), 3));
 			} else {
-				sendMessage(sender, ChatColor.RED, args[1] + " is not in the server");
+				sender.sendMessage(ChatColor.RED + args[1] + " is not in the server");
 			}
 		}
 	}
 
+	/**
+	 * Takes a Location and formats it to a string X / Y / Z
+	 * 
+	 * @param location
+	 * @param decimalPoints Number of decimal points each number will be
+	 * @return
+	 */
 	private String formatLocation(Location location, int decimalPoints) {
 		String decimalFormat = ".";
 
@@ -400,14 +585,11 @@ public class Main extends JavaPlugin {
 				+ dp.format(location.getY()) + ChatColor.WHITE + " / " + ChatColor.BLUE + dp.format(location.getZ());
 	}
 
-	private void sendMessage(CommandSender sender, ChatColor color, String message) {
-		if (sender instanceof Player) {
-			sender.sendMessage(color + message);
-		} else {
-			getLogger().info(message);
-		}
-	}
-
+	/**
+	 * Teleports the command sender to a random location in the world they're in
+	 * 
+	 * @param sender
+	 */
 	private void randomTeleportCommand(CommandSender sender) {
 		if (!sender.hasPermission("CJCommands.randomtp")) {
 			noPermission(sender);
@@ -429,6 +611,11 @@ public class Main extends JavaPlugin {
 		}
 	}
 
+	/**
+	 * Sends the player a message saying they don't have permission to run a command
+	 * 
+	 * @param sender
+	 */
 	private void noPermission(CommandSender sender) {
 		sender.sendMessage(ChatColor.RED + "You do not have permission to use this command");
 	}
