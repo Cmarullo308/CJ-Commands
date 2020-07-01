@@ -6,5 +6,8 @@ CJCommands.setgamemode -- set own gamemode
 CJCommands.setgamemodeotherplayer -- set another players gamemode
 CJCommands.getplayerlocation -- gets a players location
 CJCommands.randomtp -- teleports you to a random location
-CJCommands.teleportbehind -- allowed to teleport
+CJCommands.teleportbehind -- allowed to teleport behind
 CJCommands.teleportbehindothers -- can teleport others
+CJCommands.teleport -- allowed to teleport
+CJCommands.teleportothers -- allowed to teleport others
+CJCommands.removeItemMeta -- allowed to remove meta from items

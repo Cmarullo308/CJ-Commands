@@ -1,12 +1,19 @@
 package me.cjCommands.main;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import Tools.MyFuncs;
@@ -60,10 +67,7 @@ public class Main extends JavaPlugin {
 				getPointDistance(sender, args, false);
 				break;
 			case "distto":
-				distanceToPlayer(sender, args, true);
-				break;
-			case "disttod":
-				distanceToPlayer(sender, args, false);
+				distanceToPlayer(sender, args);
 				break;
 			case "help":
 				helpMenu(sender, args);
@@ -71,11 +75,14 @@ public class Main extends JavaPlugin {
 			case "slay":
 				slay(sender, args);
 				break;
-			case "tpb":
+			case "teleportbehind":
 				teleportBehind(sender, args);
 				break;
-			case "teleportBehind":
-				teleportBehind(sender, args);
+			case "tp":
+				teleport(sender, args);
+				break;
+			case "removeitemmeta":
+				removeItemMeta(sender, args);
 				break;
 			default:
 				break;
@@ -83,6 +90,175 @@ public class Main extends JavaPlugin {
 		}
 
 		return true;
+	}
+
+	public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+		if (command.getName().equalsIgnoreCase("c")) {
+			ArrayList<String> choices = new ArrayList<String>();
+			if (args.length == 1) {
+				String arg = args[0].toLowerCase();
+				if ("randomTP".startsWith(arg)) {
+					choices.add("randomTP");
+				}
+
+				if ("getlocation".startsWith(arg)) {
+					choices.add("getlocation");
+				}
+
+				if ("gamemode".startsWith(arg)) {
+					choices.add("gamemode");
+				}
+
+				if ("setpoint".startsWith(arg)) {
+					choices.add("setpoint");
+				}
+
+				if ("getpoints".startsWith(arg)) {
+					choices.add("getpoints");
+				}
+
+				if ("getdist".startsWith(arg)) {
+					choices.add("getdist");
+				}
+
+				if ("distto".startsWith(arg)) {
+					choices.add("distto");
+				}
+
+				if ("help".startsWith(arg)) {
+					choices.add("help");
+				}
+
+				if ("slay".startsWith(arg)) {
+					choices.add("slay");
+				}
+
+				if ("teleportbehind".startsWith(arg)) {
+					choices.add("teleportBehind");
+				}
+
+				if ("tp".startsWith(arg)) {
+					choices.add("tp");
+				}
+
+				if ("removeitemmeta".startsWith(arg)) {
+					choices.add("removeItemMeta");
+				}
+			} else if (args.length == 2) {
+				String arg = args[0].toLowerCase();
+				consoleMessage(arg);
+				if (arg.equals("gamemode") || arg.equals("gm")) {
+					arg = args[1].toLowerCase();
+					if ("adventure".startsWith(arg)) {
+						choices.add("adventure");
+					}
+
+					if ("creative".startsWith(arg)) {
+						choices.add("creative");
+					}
+
+					if ("spectator".startsWith(arg)) {
+						choices.add("spectator");
+					}
+
+					if ("survival".startsWith(arg)) {
+						choices.add("survival");
+					}
+				} else if (arg.equals("setpoint")) {
+					arg = args[1].toLowerCase();
+					if ("1".startsWith(arg)) {
+						choices.add("1");
+					}
+
+					if ("2".startsWith(arg)) {
+						choices.add("2");
+					}
+				}
+			}
+			Collections.sort(choices);
+			if (choices.size() > 0) {
+				return choices;
+			}
+		}
+
+		return null;
+	}
+
+	private void removeItemMeta(CommandSender sender, String[] args) {
+		// Checks if the sender is a player
+		if (!(sender instanceof Player)) {
+			sender.sendMessage(ChatColor.RED + "Must be a player to teleport");
+			return;
+		}
+
+		// Checks if the sender had permission to run this command
+		if (!sender.hasPermission("CJCommands.removeItemMeta")) {
+			noPermission(sender);
+			return;
+		}
+
+		Player player = (Player) sender;
+
+		Material material = player.getInventory().getItemInMainHand().getType();
+		int amount = player.getInventory().getItemInMainHand().getAmount();
+		ItemStack newItemStack = new ItemStack(material, amount);
+
+		int damage = 0;
+		// If item is damaged
+		if (((Damageable) player.getInventory().getItemInMainHand().getItemMeta()).getDamage() != 0) {
+			damage = ((Damageable) player.getInventory().getItemInMainHand().getItemMeta()).getDamage();
+		}
+
+		if (damage != 0) {
+			ItemMeta meta = newItemStack.getItemMeta();
+			((Damageable) meta).setDamage(damage);
+			newItemStack.setItemMeta(meta);
+		}
+
+		player.getInventory().setItemInMainHand(newItemStack);
+	}
+
+	public void consoleMessage(String message) {
+		getLogger().info(message);
+	}
+
+	private void teleport(CommandSender sender, String[] args) {
+		if (args.length == 2) {
+			if (!(sender instanceof Player)) {
+				sender.sendMessage("Must be a player to run this command");
+				return;
+			} else if (!sender.hasPermission("CJCommands.teleport")) {
+				noPermission(sender);
+				return;
+			}
+
+			Player player = (Player) sender;
+			Player toPlayer = getServer().getPlayer(args[1]);
+
+			if (toPlayer != null) {
+				player.teleport(toPlayer);
+			}
+		} else if (args.length == 3) {
+			if (!sender.hasPermission("CJCommands.teleportothers")) {
+				noPermission(sender);
+				return;
+			}
+
+			Player player1 = getServer().getPlayer(args[1]);
+			Player player2 = getServer().getPlayer(args[2]);
+
+			if (player1 == null) {
+				sender.sendMessage(args[1] + " does not exist in this server");
+				return;
+			} else if (player2 == null) {
+				sender.sendMessage(args[2] + " does not exist in this server");
+				return;
+			}
+
+			player1.teleport(player2);
+		} else {
+			sender.sendMessage(ChatColor.RED + "Invalid number of arguements");
+		}
 	}
 
 	/**
@@ -233,6 +409,8 @@ public class Main extends JavaPlugin {
 					+ "Shows distance between 2 players\n";
 			helpMenu += ChatColor.GREEN + "DistToD <Player name> [Player name]: " + ChatColor.WHITE
 					+ "Shows distance between 2 players with decimal points\n";
+			helpMenu += ChatColor.GREEN + "TP <player1> [player2]: " + ChatColor.WHITE
+					+ "Teleport to a player, or a player to a player";
 		}
 
 		sender.sendMessage(helpMenu);
@@ -280,7 +458,7 @@ public class Main extends JavaPlugin {
 	 * @param args
 	 * @param sendAsInt
 	 */
-	private void distanceToPlayer(CommandSender sender, String[] args, boolean sendAsInt) {
+	private void distanceToPlayer(CommandSender sender, String[] args) {
 		if (!sender.hasPermission("CJCommands.distto")) {
 			noPermission(sender);
 			return;
@@ -304,6 +482,11 @@ public class Main extends JavaPlugin {
 				sender.sendMessage(ChatColor.RED + "Player is not in this server");
 				return;
 			}
+
+			if (!player1.getLocation().getWorld().equals(player2.getLocation().getWorld())) {
+				sender.sendMessage(ChatColor.RED + "Player is in a different world, cannot calculate distance");
+				return;
+			}
 		} else if (args.length == 3) {
 			player1 = getServer().getPlayer(args[1]);
 			player2 = getServer().getPlayer(args[2]);
@@ -318,26 +501,22 @@ public class Main extends JavaPlugin {
 				sender.sendMessage(ChatColor.RED + args[2] + " is not in this server");
 				return;
 			}
+
+			if (!player1.getLocation().getWorld().equals(player2.getLocation().getWorld())) {
+				sender.sendMessage(ChatColor.RED + "Players are in different worlds, cannot calculate distance");
+				return;
+			}
 		}
 
 		distance = getDistance(player1.getLocation(), player2.getLocation());
 
 		if (args.length == 2) {
-			if (sendAsInt) {
-				sender.sendMessage(player2.getName() + " is " + (int) distance + " blocks away");
-			} else {
-				DecimalFormat dp = new DecimalFormat(".###");
-				sender.sendMessage(player2.getName() + " is " + dp.format(distance) + " blocks away");
-			}
+			DecimalFormat dp = new DecimalFormat("#.##");
+			sender.sendMessage(player2.getName() + " is " + dp.format(distance) + " blocks away");
 		} else {
-			if (sendAsInt) {
-				sender.sendMessage(
-						player1.getName() + " is " + (int) distance + " blocks away from " + player2.getName());
-			} else {
-				DecimalFormat dp = new DecimalFormat(".###");
-				sender.sendMessage(
-						player1.getName() + " is " + dp.format(distance) + " blocks away from " + player2.getName());
-			}
+			DecimalFormat dp = new DecimalFormat("#.##");
+			sender.sendMessage(
+					player1.getName() + " is " + dp.format(distance) + " blocks away from " + player2.getName());
 		}
 
 	}
@@ -380,6 +559,12 @@ public class Main extends JavaPlugin {
 					return;
 				} else if (!ppl.location2Set()) {
 					sender.sendMessage(ChatColor.RED + "Point 2 not set");
+					return;
+				}
+
+				if (!ppl.getLocation1().getWorld().equals(ppl.getLocation2().getWorld())) {
+					sender.sendMessage(
+							ChatColor.RED + "The 2 points are in different worlds, cannot calculate distance");
 					return;
 				}
 
@@ -435,7 +620,7 @@ public class Main extends JavaPlugin {
 						player.sendMessage("Set point 1 to XYZ: " + formatLocation(ppl.getLocation1(), 3));
 					} else {
 						ppl.setLocation2(player.getLocation());
-						player.sendMessage("Set point 1 to XYZ: " + formatLocation(ppl.getLocation2(), 3));
+						player.sendMessage("Set point 2 to XYZ: " + formatLocation(ppl.getLocation2(), 3));
 					}
 				} else {
 					sender.sendMessage(ChatColor.RED + "Invalid number. Must be 1 or 2");
@@ -459,7 +644,6 @@ public class Main extends JavaPlugin {
 	private void setGamemode(CommandSender sender, String[] args) {
 
 		Player player;
-		int gamemode = -1;
 		String messageBeginning;
 
 		if (args.length == 2) { // Setting own gamemode
@@ -469,13 +653,20 @@ public class Main extends JavaPlugin {
 			}
 			if (sender instanceof Player) {
 				player = (Player) sender;
-				try {
-					gamemode = Integer.parseInt(args[1]);
-				} catch (NumberFormatException e) {
-					sender.sendMessage(ChatColor.RED + "Invalid gamemode number");
-					return;
+				String mode = args[1].toLowerCase();
+				if (mode.equals("creative")) {
+					player.setGameMode(GameMode.CREATIVE);
+					player.sendMessage(ChatColor.WHITE + "Set gamemode to " + ChatColor.YELLOW + GameMode.CREATIVE);
+				} else if (mode.equals("survival")) {
+					player.setGameMode(GameMode.SURVIVAL);
+					player.sendMessage(ChatColor.WHITE + "Set gamemode to " + ChatColor.YELLOW + GameMode.SURVIVAL);
+				} else if (mode.equals("spectator")) {
+					player.setGameMode(GameMode.SPECTATOR);
+					player.sendMessage(ChatColor.WHITE + "Set gamemode to " + ChatColor.YELLOW + GameMode.SPECTATOR);
+				} else if (mode.equals("adventure")) {
+					player.setGameMode(GameMode.ADVENTURE);
+					player.sendMessage(ChatColor.WHITE + "Set gamemode to " + ChatColor.YELLOW + GameMode.ADVENTURE);
 				}
-				messageBeginning = "Set own gamemode to ";
 			} else {
 				sender.sendMessage("Must be a player to change gamemodes");
 				return;
@@ -487,18 +678,27 @@ public class Main extends JavaPlugin {
 			}
 			player = getServer().getPlayer(args[2]);
 			if (player != null && player.isOnline()) {
-				try {
-					gamemode = Integer.parseInt(args[1]);
-				} catch (NumberFormatException e) {
-					sender.sendMessage(ChatColor.RED + "Invalid gamemode number");
-					return;
-				}
 
 				// Grammar
 				if (args[2].charAt(args[2].length() - 1) == 's') {
-					messageBeginning = "Set" + args[2] + "' gamemode to ";
+					messageBeginning = "Set " + args[2] + "' gamemode to ";
 				} else {
-					messageBeginning = "Set" + args[2] + "'s gamemode to ";
+					messageBeginning = "Set " + args[2] + "'s gamemode to ";
+				}
+
+				String mode = args[1].toLowerCase();
+				if (mode.equals("creative")) {
+					player.setGameMode(GameMode.CREATIVE);
+					player.sendMessage(ChatColor.WHITE + messageBeginning + ChatColor.YELLOW + GameMode.CREATIVE);
+				} else if (mode.equals("survival")) {
+					player.setGameMode(GameMode.SURVIVAL);
+					player.sendMessage(ChatColor.WHITE + messageBeginning + ChatColor.YELLOW + GameMode.SURVIVAL);
+				} else if (mode.equals("spectator")) {
+					player.setGameMode(GameMode.SPECTATOR);
+					player.sendMessage(ChatColor.WHITE + messageBeginning + ChatColor.YELLOW + GameMode.SPECTATOR);
+				} else if (mode.equals("adventure")) {
+					player.setGameMode(GameMode.ADVENTURE);
+					player.sendMessage(ChatColor.WHITE + messageBeginning + ChatColor.YELLOW + GameMode.ADVENTURE);
 				}
 			} else {
 				sender.sendMessage(ChatColor.RED + args[2] + " is not in the server");
@@ -507,36 +707,6 @@ public class Main extends JavaPlugin {
 		} else {
 			sender.sendMessage(ChatColor.RED + "Invalid number of arguements");
 			return;
-		}
-
-		switch (gamemode) {
-		case 0:
-			if (player.getGameMode() != GameMode.SURVIVAL) {
-				player.setGameMode(GameMode.SURVIVAL);
-				sender.sendMessage(ChatColor.WHITE + messageBeginning + GameMode.SURVIVAL);
-			}
-			break;
-		case 1:
-			if (player.getGameMode() != GameMode.CREATIVE) {
-				player.setGameMode(GameMode.CREATIVE);
-				sender.sendMessage(ChatColor.WHITE + messageBeginning + GameMode.CREATIVE);
-			}
-			break;
-		case 2:
-			if (player.getGameMode() != GameMode.ADVENTURE) {
-				player.setGameMode(GameMode.ADVENTURE);
-				sender.sendMessage(ChatColor.WHITE + messageBeginning + GameMode.ADVENTURE);
-			}
-			break;
-		case 3:
-			if (player.getGameMode() != GameMode.SPECTATOR) {
-				player.setGameMode(GameMode.SPECTATOR);
-				sender.sendMessage(ChatColor.WHITE + messageBeginning + GameMode.SPECTATOR);
-			}
-			break;
-		default:
-			sender.sendMessage(ChatColor.RED + "Invalid gamemode number");
-			break;
 		}
 	}
 
@@ -581,8 +751,9 @@ public class Main extends JavaPlugin {
 
 		DecimalFormat dp = new DecimalFormat(decimalFormat);
 
-		return ChatColor.RED + dp.format(location.getX()) + ChatColor.WHITE + " / " + ChatColor.GREEN
-				+ dp.format(location.getY()) + ChatColor.WHITE + " / " + ChatColor.BLUE + dp.format(location.getZ());
+		return ChatColor.YELLOW + location.getWorld().getName() + ChatColor.WHITE + " / " + ChatColor.RED
+				+ dp.format(location.getX()) + ChatColor.WHITE + " / " + ChatColor.GREEN + dp.format(location.getY())
+				+ ChatColor.WHITE + " / " + ChatColor.BLUE + dp.format(location.getZ());
 	}
 
 	/**
