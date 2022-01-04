@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -17,7 +18,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import Tools.MyFuncs;
-import net.md_5.bungee.api.ChatColor;
 
 public class Main extends JavaPlugin {
 	PlayerPoints playerPoints;
@@ -84,6 +84,12 @@ public class Main extends JavaPlugin {
 			case "removeitemmeta":
 				removeItemMeta(sender, args);
 				break;
+			case "locationinnether":
+				locationInNether(sender, args);
+				break;
+			case "locationinoverworld":
+				locationInOverworld(sender, args);
+				break;
 			default:
 				break;
 			}
@@ -144,6 +150,14 @@ public class Main extends JavaPlugin {
 				if ("removeitemmeta".startsWith(arg)) {
 					choices.add("removeItemMeta");
 				}
+
+				if ("locationinnether".startsWith(arg)) {
+					choices.add("locationinnether");
+				}
+
+				if ("locationinoverworld".startsWith(arg)) {
+					choices.add("locationinoverworld");
+				}
 			} else if (args.length == 2) {
 				String arg = args[0].toLowerCase();
 				consoleMessage(arg);
@@ -182,6 +196,64 @@ public class Main extends JavaPlugin {
 		}
 
 		return null;
+	}
+
+	private void locationInOverworld(CommandSender sender, String[] args) {
+		// Checks if the sender is a player
+		if (!(sender instanceof Player)) {
+			sender.sendMessage(ChatColor.RED + "Must be a player to run this command");
+			return;
+		}
+
+		// Checks if the sender had permission to run this command
+		if (!sender.hasPermission("CJCommands.locationInOverworld")) {
+			noPermission(sender);
+			return;
+		}
+
+		Player player = (Player) sender;
+		Location playerLocation = player.getLocation();
+
+		if (!playerLocation.getWorld().getName().equals("world_nether")) {
+			player.sendMessage(ChatColor.RED + "You must be in the nether to run this command");
+			return;
+		}
+
+		int overworldX = ((int) (playerLocation.getX()) * 8);
+		int overworldY = (int) playerLocation.getY();
+		int overworldZ = ((int) playerLocation.getZ()) * 8;
+
+		player.sendMessage(ChatColor.AQUA + "X:" + ChatColor.WHITE + overworldX + ChatColor.AQUA + " Y:"
+				+ ChatColor.WHITE + overworldY + ChatColor.AQUA + " Z:" + ChatColor.WHITE + overworldZ);
+	}
+
+	private void locationInNether(CommandSender sender, String[] args) {
+		// Checks if the sender is a player
+		if (!(sender instanceof Player)) {
+			sender.sendMessage(ChatColor.RED + "Must be a player to run this command");
+			return;
+		}
+
+		// Checks if the sender had permission to run this command
+		if (!sender.hasPermission("CJCommands.locationInNether")) {
+			noPermission(sender);
+			return;
+		}
+
+		Player player = (Player) sender;
+		Location playerLocation = player.getLocation();
+
+		if (!playerLocation.getWorld().getName().equals("world")) {
+			player.sendMessage(ChatColor.RED + "You must be in the overworld to run this command");
+			return;
+		}
+
+		int netherX = (int) (playerLocation.getX() / 8);
+		int netherY = (int) playerLocation.getY();
+		int netherZ = (int) playerLocation.getZ() / 8;
+
+		player.sendMessage(ChatColor.AQUA + "X:" + ChatColor.WHITE + netherX + ChatColor.AQUA + " Y:" + ChatColor.WHITE
+				+ netherY + ChatColor.AQUA + " Z:" + ChatColor.WHITE + netherZ);
 	}
 
 	private void removeItemMeta(CommandSender sender, String[] args) {

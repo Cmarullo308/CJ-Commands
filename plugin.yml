@@ -1,8 +1,8 @@
 main: me.cjCommands.main.Main
 name: CJCommands
 author: CJM
-version: 1.4
-api-version: 1.13
+version: 1.5
+api-version: 1.18
 description: Random Commands
 
 commands:
