@@ -11,3 +11,4 @@ CJCommands.teleportbehindothers -- can teleport others
 CJCommands.teleport -- allowed to teleport
 CJCommands.teleportothers -- allowed to teleport others
 CJCommands.removeItemMeta -- allowed to remove meta from items
+CJCommands.isslimechunk -- lets player check if the current chunk is a slime chunk

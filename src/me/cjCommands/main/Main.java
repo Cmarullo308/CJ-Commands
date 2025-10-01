@@ -90,6 +90,9 @@ public class Main extends JavaPlugin {
 			case "locationinoverworld":
 				locationInOverworld(sender, args);
 				break;
+			case "isslimechunk":
+				checkIfSlimeChunk(sender, args);
+				break;
 			default:
 				break;
 			}
@@ -99,7 +102,7 @@ public class Main extends JavaPlugin {
 	}
 
 	public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
-		if (command.getName().equalsIgnoreCase("c")) {
+		if (command.getName().equalsIgnoreCase("c") || command.getName().equalsIgnoreCase("cjcommands")) {
 			ArrayList<String> choices = new ArrayList<String>();
 			if (args.length == 1) {
 				String arg = args[0].toLowerCase();
@@ -158,9 +161,12 @@ public class Main extends JavaPlugin {
 				if ("locationinoverworld".startsWith(arg)) {
 					choices.add("locationinoverworld");
 				}
+
+				if ("isslimechunk".startsWith(arg)) {
+					choices.add("isslimechunk");
+				}
 			} else if (args.length == 2) {
 				String arg = args[0].toLowerCase();
-				consoleMessage(arg);
 				if (arg.equals("gamemode") || arg.equals("gm")) {
 					arg = args[1].toLowerCase();
 					if ("adventure".startsWith(arg)) {
@@ -851,6 +857,73 @@ public class Main extends JavaPlugin {
 					+ newLocation.getBlockY() + " Z:" + newLocation.getBlockZ());
 		} else {
 			getLogger().info("Must be a player to run this command");
+		}
+	}
+
+	/***
+	 * Checks if the player is standing in a slime chunk
+	 * 
+	 * @param sender
+	 * @param args
+	 */
+	private void checkIfSlimeChunk(CommandSender sender, String[] args) {
+		if (args.length != 1 && args.length != 3) {
+			sender.sendMessage(ChatColor.RED + "Invalid arguements");
+			return;
+		}
+
+		if (!(sender instanceof Player)) {
+			sender.sendMessage("Must be a player to run this command");
+			return;
+		}
+
+		if (!sender.hasPermission("CJCommands.isslimechunk")) {
+			noPermission(sender);
+			return;
+		}
+
+		Player player = (Player) sender;
+		Location location;
+
+		if (args.length == 1) {
+			location = player.getLocation();
+		} else {
+			int x;
+			int z;
+
+			// Parse X
+			try {
+				x = Integer.parseInt(args[1]);
+			} catch (NumberFormatException e) {
+				player.sendMessage("Invalid input: '" + args[1] + "' is not a valid integer.");
+				return;
+			}
+
+			// Parse Y
+			try {
+				z = Integer.parseInt(args[2]);
+			} catch (NumberFormatException e) {
+				player.sendMessage("Invalid input: '" + args[2] + "' is not a valid integer.");
+				return;
+			}
+
+			location = new Location(player.getLocation().getWorld(), x, player.getLocation().getY(), z);
+		}
+
+		if (location.getChunk().isSlimeChunk()) {
+			if (args.length == 1) {
+				player.sendMessage(ChatColor.GREEN + "✔ " + ChatColor.WHITE + "This is a slime chunk");
+			} else {
+				player.sendMessage(ChatColor.GREEN + "✔ " + ChatColor.WHITE + "Location (" + (int) location.getX() + ","
+						+ (int) location.getZ() + ") is in a slime chunk");
+			}
+		} else {
+			if (args.length == 1) {
+				player.sendMessage(ChatColor.RED + "✘ " + ChatColor.WHITE + "This is not a slime chunk");
+			} else {
+				player.sendMessage(ChatColor.RED + "✘ " + ChatColor.WHITE + "Location (" + (int) location.getX() + ","
+						+ (int) location.getZ() + ") is not in a slime chunk");
+			}
 		}
 	}
 
