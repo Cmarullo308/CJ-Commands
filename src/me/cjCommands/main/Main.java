@@ -9,6 +9,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.SculkShrieker;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -93,6 +95,9 @@ public class Main extends JavaPlugin {
 			case "isslimechunk":
 				checkIfSlimeChunk(sender, args);
 				break;
+			case "shriekerwarninglevel":
+				getShriekerWarningLevel(sender, args);
+				break;
 			default:
 				break;
 			}
@@ -165,6 +170,10 @@ public class Main extends JavaPlugin {
 				if ("isslimechunk".startsWith(arg)) {
 					choices.add("isslimechunk");
 				}
+
+				if ("shriekerwarninglevel".startsWith(arg)) {
+					choices.add("shriekerwarninglevel");
+				}
 			} else if (args.length == 2) {
 				String arg = args[0].toLowerCase();
 				if (arg.equals("gamemode") || arg.equals("gm")) {
@@ -202,6 +211,33 @@ public class Main extends JavaPlugin {
 		}
 
 		return null;
+	}
+
+	private void getShriekerWarningLevel(CommandSender sender, String[] args) {
+		// Checks if the sender is a player
+		if (!(sender instanceof Player)) {
+			sender.sendMessage(ChatColor.RED + "Must be a player to run this command");
+			return;
+		}
+
+		// Checks if the sender had permission to run this command
+		if (!sender.hasPermission("CJCommands.shriekerWarningLevel")) {
+			noPermission(sender);
+			return;
+		}
+
+		Player player = (Player) sender;
+
+		Block block = player.getTargetBlockExact(5);
+
+		if (block == null || !(block.getState() instanceof SculkShrieker)) {
+			player.sendMessage(ChatColor.RED + "Must be looking at a shrieker");
+			return;
+		} else {
+			SculkShrieker shrieker = (SculkShrieker) block.getState();
+			int warningLevel = shrieker.getWarningLevel();
+			player.sendMessage("Warning Level: " + warningLevel);
+		}
 	}
 
 	private void locationInOverworld(CommandSender sender, String[] args) {
